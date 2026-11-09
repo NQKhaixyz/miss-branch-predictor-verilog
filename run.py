@@ -11,6 +11,8 @@ import subprocess
 import sys
 import tempfile
 
+from prediction_trace import BRANCH_FIELDS, verify_prediction_trace
+
 
 ROOT = Path(__file__).resolve().parent
 MODES = {0: "stall", 1: "always_nt", 2: "one_bit", 3: "two_bit", 4: "single_cycle"}
@@ -62,7 +64,7 @@ def compile_tb(iverilog, work, top, **parameters):
     return target
 
 
-def simulation(vvp, binary, case, meta, vcd=None):
+def simulation(vvp, binary, case, meta, mode, index_bits, vcd=None):
     inputs = {
         "IMEM": "imem.hex", "DMEM": "dmem.hex", "TRACE": "trace.hex",
         "BRANCH": "branches.hex", "FINAL_DMEM": "final_dmem.hex",
@@ -74,6 +76,9 @@ def simulation(vvp, binary, case, meta, vcd=None):
     ])
     if vcd:
         args.append(f"+VCD={vcd}")
+    predicted = mode in (1, 2, 3)
+    if predicted:
+        args.append("+PREDICTION_TRACE")
     output = command([vvp, binary, *args])
     result = re.findall(r"^RESULT (.+)$", output, flags=re.MULTILINE)
     if len(result) != 1 or re.search(r"^ERROR:", output, flags=re.MULTILINE):
@@ -81,7 +86,15 @@ def simulation(vvp, binary, case, meta, vcd=None):
     counters = {key: int(value) for key, value in re.findall(r"(\w+)=(\d+)", result[0])}
     if set(COUNTERS) - counters.keys():
         raise RuntimeError(f"Thiếu bộ đếm trong kết quả\n{output}")
-    return {key: counters[key] for key in COUNTERS}
+    counts = {key: counters[key] for key in COUNTERS}
+    branch_rows = []
+    if predicted:
+        instructions = [int(word, 16) for word in (case / "imem.hex").read_text(encoding="ascii").split()]
+        try:
+            branch_rows = verify_prediction_trace(output, counts, instructions, mode, index_bits)
+        except RuntimeError as error:
+            raise RuntimeError(f"{case.name} / {MODES[mode]}: {error}") from error
+    return counts, branch_rows
 
 
 def percentage(num, den):
@@ -121,10 +134,12 @@ def run(args, work):
     iverilog, vvp = simulator(args.iverilog_bin)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
+    wave_dir = output / "waveforms"
+    wave_dir.mkdir(exist_ok=True)
     print(command([iverilog, "-V"]).splitlines()[0], flush=True)
 
     predictor = compile_tb(iverilog, work, "tb_predictor")
-    check = command([vvp, predictor])
+    check = command([vvp, predictor, f"+VCD={wave_dir / 'predictor_unit.vcd'}"])
     if "PASS predictor" not in check or re.search(r"^ERROR:", check, re.MULTILINE):
         raise RuntimeError(check)
     print("PASS predictor", flush=True)
@@ -143,6 +158,7 @@ def run(args, work):
         for mode, idx in main_modes + sweep_modes
     }
     rows = []
+    branch_rows = []
     for case in cases:
         meta = json.loads(case.read_text(encoding="utf-8"))
         name = case.parent.name
@@ -151,9 +167,13 @@ def run(args, work):
         for mode, idx in modes:
             vcd = None
             if name in args.wave and idx == 6 and mode in (0, 3):
-                vcd = output / "waveforms" / f"{name}_{MODES[mode]}.vcd"
-                vcd.parent.mkdir(exist_ok=True)
-            metrics[mode, idx] = simulation(vvp, binaries[mode, idx], case.parent, meta, vcd)
+                vcd = wave_dir / f"{name}_{MODES[mode]}.vcd"
+            counts, by_pc = simulation(vvp, binaries[mode, idx], case.parent, meta, mode, idx, vcd)
+            metrics[mode, idx] = counts
+            branch_rows.extend(
+                {"case": name, "mode": MODES[mode], "entries": 1 << idx if mode in (2, 3) else 0, **row}
+                for row in by_pc
+            )
         for (mode, idx), counts in metrics.items():
             rows.append(measure(
                 name, meta, mode, idx, counts, metrics[0, 6]["cycles"], metrics[1, 6]["cycles"],
@@ -164,6 +184,10 @@ def run(args, work):
         writer = csv.DictWriter(file, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
+    with (output / "branch_stats.csv").open("w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=("case", "mode", "entries", "pc", *BRANCH_FIELDS))
+        writer.writeheader()
+        writer.writerows(branch_rows)
     if not args.no_plot:
         from plot_results import plot
         plot(rows, output)

@@ -1,6 +1,6 @@
-# Dự đoán nhánh cho CPU MIPS pipeline
+# Thiết kế và mô phỏng bộ dự đoán nhánh (Branch Predictor) cho bộ xử lý MIPS bằng Verilog HDL
 
-Đồ án Verilog HDL triển khai tập con MIPS 32 bit, với pipeline 5 tầng và bốn chế độ xử lý nhánh. Mỗi lượt mô phỏng kiểm tra kết quả của CPU với một trình thông dịch Python độc lập rồi mới ghi số liệu hiệu năng.
+Đồ án thiết kế bộ dự đoán hướng 2 bit và BTB để chọn PC kế tiếp cho CPU MIPS pipeline 5 tầng. Mô phỏng so sánh bốn chế độ xử lý nhánh trên cùng chương trình. Mỗi lượt đối chiếu kết quả thực thi với trình thông dịch Python. Các chế độ dự đoán còn được kiểm tra theo từng chu kỳ với mô hình tham chiếu BHT/BTB.
 
 ## Chạy lại mô phỏng
 
@@ -28,13 +28,15 @@ python run.py --case sum_loop --no-sweep --output build/demo
 | Đường dẫn | Nội dung |
 |---|---|
 | [rtl/](rtl/) | Lõi pipeline, lõi single-cycle, datapath dùng chung và BP |
-| [tb/](tb/) | Kiểm tra BP, trace của CPU, cổng ghi RAM và trạng thái RAM cuối |
+| [tb/](tb/) | Testbench predictor độc lập và testbench CPU, đối chiếu lệnh hoàn tất và ghi RAM |
+| [prediction_trace.py](prediction_trace.py) | Đối chiếu dự đoán ở IF, dữ liệu mang tới EX và cập nhật BHT/BTB |
 | [programs/](programs/) | Nguồn assembly, bộ sinh ảnh bộ nhớ và trình thông dịch |
-| [docs/DESIGN.md](docs/DESIGN.md) | Đặc tả ISA, pipeline, predictor và phép đo |
+| [docs/DESIGN.md](docs/DESIGN.md) | Đặc tả ISA, sơ đồ trạng thái, giao diện predictor và phép đo |
 | [docs/DEMO.md](docs/DEMO.md) | Trình tự demo và tín hiệu xem trong GTKWave |
 | [docs/Trinh-bay-MIPS-BP.pptx](docs/Trinh-bay-MIPS-BP.pptx) | Slide thuyết trình và ghi chú demo |
 | [results/REPORT.md](results/REPORT.md) | Báo cáo thực nghiệm |
 | [results/metrics.csv](results/metrics.csv) | Số liệu từng lần chạy, gồm quét kích thước bảng |
+| [results/branch_stats.csv](results/branch_stats.csv) | Số lần dự đoán và nguyên nhân sai PC theo từng địa chỉ nhánh |
 | [results/performance.png](results/performance.png) | Độ chính xác hướng và tỷ lệ tăng tốc |
 
 ```powershell

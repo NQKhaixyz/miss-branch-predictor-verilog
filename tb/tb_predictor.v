@@ -33,6 +33,8 @@ module tb_predictor;
         .update_pc(update_pc), .update_taken(update_taken),
         .update_target(update_target)
     );
+    // A = 0x100 maps to index zero for this unit test.
+    wire [1:0] state_a = two_bit.dynamic_predictor.saturating_counter.history[0];
 
     task expect_lookup;
         input [8*80-1:0] label;
@@ -78,7 +80,9 @@ module tb_predictor;
     initial begin
         if ($value$plusargs("VCD=%s", vcd_path)) begin
             $dumpfile(vcd_path);
-            $dumpvars(0, tb_predictor);
+            $dumpvars(0, clk, reset, lookup_pc, update_valid, update_pc,
+                      update_taken, update_target, raw_1, hit_1, taken_1, next_1,
+                      raw_2, hit_2, taken_2, next_2, state_a);
         end
         repeat (2) @(negedge clk);
         reset = 0;

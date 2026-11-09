@@ -6,7 +6,9 @@ Bộ dự đoán **2 bit + BTB 64 mục** đoán đúng hướng **1.016/1.327 n
 
 ## Thiết lập thực nghiệm
 
-Lõi Verilog-2005 chạy tập con MIPS 32 bit trên pipeline IF, ID, EX, MEM, WB. Bốn cấu hình dùng cùng chương trình, dữ liệu, bộ nhớ và forwarding. Mỗi lượt bắt đầu từ reset. Mô phỏng bằng Icarus Verilog 13.0; testbench kiểm tra thứ tự lệnh hoàn tất, kết quả nhánh, lần ghi thanh ghi, cổng ghi RAM và toàn bộ RAM cuối với mô hình Python. Đã chạy 87 lượt CPU trên 11 chương trình, gồm lõi single-cycle kiểm tra ISA và các cấu hình quét kích thước. Testbench riêng của BP kiểm tra bão hòa, reset, xung đột tag và đọc/cập nhật cùng cạnh.
+Lõi Verilog-2005 chạy tập con MIPS 32 bit trên pipeline IF, ID, EX, MEM, WB. Bốn cấu hình dùng cùng chương trình, dữ liệu, bộ nhớ và forwarding. Mỗi lượt bắt đầu từ reset. Mô phỏng bằng Icarus Verilog 13.0. Testbench kiểm tra thứ tự lệnh hoàn tất, kết quả nhánh, lần ghi thanh ghi, cổng ghi RAM và toàn bộ RAM cuối với trình thông dịch Python. Với chế độ dự đoán, một mô hình Python khác kiểm tra thêm dự đoán ở IF theo từng chu kỳ, PC sau stall hoặc flush, và dữ liệu dự đoán đi tới EX.
+
+Đã chạy 87 lượt CPU trên 11 chương trình, gồm lõi single-cycle kiểm tra ISA và các cấu hình quét kích thước. Testbench riêng của BP kiểm tra bão hòa, reset, xung đột tag và đọc/cập nhật cùng cạnh. Có thể quan sát bốn trạng thái của bộ đếm và BTB trong [waveform predictor độc lập](waveforms/predictor_unit.vcd).
 
 Số chu kỳ bao gồm thời gian nạp/xả pipeline và các lần đoán sai lúc bảng còn lạnh. Accuracy hướng tính trên quyết định thực sự dùng ở IF sau khi kiểm tra BTB. Accuracy toàn bộ cộng số lần đoán đúng rồi chia tổng số nhánh. Tỷ lệ tăng tốc toàn bộ lấy tổng chu kỳ của hai cấu hình để tính.
 
@@ -29,9 +31,22 @@ Bốn cột chế độ ghi số chu kỳ. Dữ liệu từng lượt ở [metri
 
 Vòng tính tổng có 99 lần rẽ liên tiếp và một lần thoát. BP 2 bit sai ở lần đầu và lúc thoát. Trên vòng lặp lồng, bộ đếm giữ khuynh hướng rẽ sau một lần thoát vòng trong, giảm số lần flush từ 42 xuống 23 so với 1 bit.
 
-Khi dữ liệu đổi theo từng khối, bộ 1 bit đổi hướng ngay sau lần sai đầu tiên. Trong bài đếm theo điều kiện, 1 bit mất 18 lần flush, còn 2 bit mất 33. Với chuỗi xen kẽ, dự đoán từ lịch sử của từng nhánh gặp khó khăn. Accuracy 49,22% của bài này gộp cả nhánh dựa vào dữ liệu và nhánh điều khiển vòng lặp. Tổng trên bảy chương trình, 1 bit đúng 1.021/1.327 nhánh (76,94%) và nhanh hơn 2 bit 10 chu kỳ.
+Khi dữ liệu đổi theo từng khối, bộ 1 bit đổi hướng ngay sau lần sai đầu tiên. Trong bài đếm theo điều kiện, 1 bit có 18 lần flush, còn 2 bit có 33. Tổng trên bảy chương trình, 1 bit đúng 1.021/1.327 nhánh (76,94%) và dùng ít hơn 2 bit 10 chu kỳ.
 
 CPI tổng giảm từ 1,9895 xuống 1,3623 giữa chế độ chờ và bộ 2 bit. Hai cấu hình cùng mất 524 chu kỳ do load-use. Chế độ chờ mất 2.654 chu kỳ ở nhánh. Bộ 2 bit dùng 311 lần flush, tương ứng 622 chu kỳ. Hiệu số là 2.032 chu kỳ, đúng với chênh lệch đo được.
+
+## Phân tích theo từng địa chỉ nhánh
+
+Trong bài `alternating`, kết quả của `beq` tại `0x10` xen kẽ rẽ và không rẽ, bắt đầu từ rẽ. Bộ đếm 2 bit khởi tạo ở `01` rồi luân phiên giữa `01` và `10`. Do đó nó luôn dự đoán ngược hướng thực tế ở nhánh này. Nhánh vòng lặp ở `0x1c` có 126 lần đoán đúng, tạo kết quả chung 126/256 (49,22%).
+
+| Địa chỉ trong `alternating` | Số lần chạy | BTB hit | Sai hướng thô | Sai PC kế tiếp |
+|---|---:|---:|---:|---:|
+| `0x10` · Nhánh theo dữ liệu | 128 | 127 | 128 | 128 |
+| `0x1c` · Nhánh vòng lặp | 128 | 127 | 2 | 2 |
+
+Trong bài `aliasing` với 64 mục, nhánh tại `0x10c` có 79 lần sai hướng thô do dùng chung BHT với nhánh `0x0c`. Cả 79 lần đều BTB miss nên IF dùng `PC + 4`, tình cờ đúng với kết quả thực tế là không rẽ. Ngược lại, nhánh `0x0c` cần rẽ 79 lần và sai PC cả 79 lần. Tách hai nhánh bằng bảng 256 mục giúp giảm lỗi ở `0x0c` còn 2 lần.
+
+[branch_stats.csv](branch_stats.csv) ghi các trường hợp này cho từng PC. Với một lần chọn sai PC, báo cáo xét lần lượt sai hướng thô, BTB miss khi hướng đã đúng, rồi đích sai khi BTB hit. Quy tắc này giúp đếm mỗi lần flush đúng một lần ngay cả khi hướng sai đồng thời với BTB miss.
 
 ## Kích thước bảng và xung đột địa chỉ
 

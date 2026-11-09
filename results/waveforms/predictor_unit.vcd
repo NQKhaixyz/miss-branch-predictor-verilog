@@ -1,0 +1,311 @@
+$date
+	Mon Nov  9 15:13:54 2026
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module tb_predictor $end
+$var reg 1 ! clk $end
+$upscope $end
+$scope module tb_predictor $end
+$var reg 1 " reset $end
+$upscope $end
+$scope module tb_predictor $end
+$var reg 32 # lookup_pc [31:0] $end
+$upscope $end
+$scope module tb_predictor $end
+$var reg 1 $ update_valid $end
+$upscope $end
+$scope module tb_predictor $end
+$var reg 32 % update_pc [31:0] $end
+$upscope $end
+$scope module tb_predictor $end
+$var reg 1 & update_taken $end
+$upscope $end
+$scope module tb_predictor $end
+$var reg 32 ' update_target [31:0] $end
+$upscope $end
+$scope module tb_predictor $end
+$var wire 1 ( raw_1 $end
+$upscope $end
+$scope module tb_predictor $end
+$var wire 1 ) hit_1 $end
+$upscope $end
+$scope module tb_predictor $end
+$var wire 1 * taken_1 $end
+$upscope $end
+$scope module tb_predictor $end
+$var wire 32 + next_1 [31:0] $end
+$upscope $end
+$scope module tb_predictor $end
+$var wire 1 , raw_2 $end
+$upscope $end
+$scope module tb_predictor $end
+$var wire 1 - hit_2 $end
+$upscope $end
+$scope module tb_predictor $end
+$var wire 1 . taken_2 $end
+$upscope $end
+$scope module tb_predictor $end
+$var wire 32 / next_2 [31:0] $end
+$upscope $end
+$scope module tb_predictor $end
+$var wire 2 0 state_a [1:0] $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+$end
+#0
+$dumpvars
+bx 0
+bx /
+x.
+x-
+x,
+bx +
+x*
+x)
+x(
+b0 '
+0&
+b0 %
+0$
+b100000000 #
+1"
+0!
+$end
+#5000
+b100000100 /
+b100000100 +
+0.
+0)
+0*
+0-
+0,
+0(
+b1 0
+1!
+#10000
+0!
+#15000
+1!
+#20000
+0"
+0!
+#25000
+1!
+#30000
+b10000000 '
+1&
+b100000000 %
+1$
+0!
+#35000
+b10000000 /
+1.
+b10000000 +
+1,
+1-
+1*
+1)
+b10 0
+1(
+1!
+#36000
+0$
+#40000
+1$
+0!
+#45000
+b11 0
+1!
+#46000
+0$
+#50000
+1$
+0!
+#55000
+1!
+#56000
+0$
+#60000
+0&
+1$
+0!
+#65000
+b100000100 +
+0*
+0(
+b10 0
+1!
+#66000
+0$
+#70000
+1$
+0!
+#75000
+b100000100 /
+0.
+0,
+b1 0
+1!
+#76000
+0$
+#80000
+1$
+0!
+#85000
+b0 0
+1!
+#86000
+0$
+#90000
+1$
+0!
+#95000
+1!
+#96000
+0$
+#100000
+1&
+1$
+0!
+#105000
+b10000000 +
+1*
+1(
+b1 0
+1!
+#106000
+0$
+#110000
+1$
+0!
+#115000
+b10000000 /
+1.
+1,
+b10 0
+1!
+#116000
+0$
+#117000
+b100010100 +
+b100010100 /
+0*
+0.
+0)
+0-
+b100010000 #
+#120000
+b110000000 '
+b100010000 %
+1$
+0!
+#125000
+b110000000 +
+b110000000 /
+1*
+1.
+1)
+1-
+b11 0
+1!
+#126000
+0$
+#127000
+b100000100 +
+b100000100 /
+0*
+0.
+0)
+0-
+b100000000 #
+#128000
+0,
+0(
+b100001000 +
+b100001000 /
+b100000100 #
+#129000
+1*
+1.
+1,
+1)
+1-
+1(
+b110000000 +
+b110000000 /
+b100010000 #
+#130000
+b111100000 '
+0&
+b100000100 %
+1$
+0!
+#135000
+1!
+#136000
+0$
+#137000
+b100001000 +
+b100001000 /
+0,
+0.
+0*
+1)
+1-
+0(
+b100000100 #
+#140000
+1&
+1$
+0!
+#145000
+b111100000 +
+1*
+1(
+1!
+#146000
+0$
+#150000
+0&
+b10000000 '
+b100010000 %
+0!
+#155000
+1.
+b110000000 +
+1*
+1,
+1)
+1-
+b110000000 /
+b100010000 #
+1!
+#160000
+1"
+0!
+#165000
+b100010100 /
+b100010100 +
+0.
+0)
+0*
+0-
+0,
+0(
+b1 0
+1!
+#170000
+0"
+0!
+#171000
+b100001000 +
+b100001000 /
+b100000100 #
+#172000

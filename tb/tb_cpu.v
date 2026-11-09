@@ -22,6 +22,8 @@ module tb_cpu;
     wire branch_valid, actual_taken, raw_pred_taken, effective_pred_taken;
     wire pred_btb_hit, flush, branch_stall, load_stall;
     wire [31:0] branch_pc, pred_next_pc, actual_next_pc;
+    wire fetch_raw, fetch_hit, fetch_taken;
+    wire [31:0] fetch_next;
 
     reg [31:0] imem [0:WORDS-1];
     reg [31:0] dmem [0:WORDS-1];
@@ -55,6 +57,7 @@ module tb_cpu;
             assign flush = 0;
             assign branch_stall = 0;
             assign load_stall = 0;
+            assign {fetch_raw, fetch_hit, fetch_taken, fetch_next} = 0;
         end else begin : pipe
             mips_pipeline #(.MODE(MODE), .INDEX_BITS(INDEX_BITS)) dut (
                 .clk(clk), .reset(reset),
@@ -73,12 +76,16 @@ module tb_cpu;
                 .pred_next_pc(pred_next_pc), .actual_next_pc(actual_next_pc),
                 .flush(flush), .branch_stall(branch_stall), .load_stall(load_stall)
             );
+            assign fetch_raw = dut.fetch_raw_taken;
+            assign fetch_hit = dut.fetch_btb_hit;
+            assign fetch_taken = dut.fetch_pred_taken;
+            assign fetch_next = dut.fetch_next_pc;
         end
     endgenerate
 
     reg [8*1024-1:0] imem_path, dmem_path, trace_path, branch_path;
     reg [8*1024-1:0] final_dmem_path, vcd_path;
-    reg check_final_dmem;
+    reg check_final_dmem, trace_predictions;
     integer trace_fd, store_fd, branch_fd;
     integer expected_count, max_cycles, i;
     integer cycles = 0;
@@ -134,6 +141,7 @@ module tb_cpu;
             max_cycles = 8 * expected_count + 32;
         if (max_cycles <= 0)
             $fatal(1, "MAX_CYCLES must be positive");
+        trace_predictions = (MODE >= 1 && MODE <= 3) && $test$plusargs("PREDICTION_TRACE");
 
         $readmemh(imem_path, imem);
         $readmemh(dmem_path, dmem);
@@ -229,6 +237,10 @@ module tb_cpu;
                 if (flush !== (pred_next_pc != ref_next_pc))
                     $fatal(1, "Incorrect flush at PC=%08h, predicted=%08h actual=%08h",
                         branch_pc, pred_next_pc, ref_next_pc);
+                if (trace_predictions)
+                    $display("RESOLVE %0d %0d %0d %0d %0d %0d %0d %0d",
+                        cycles, branch_pc, actual_taken, raw_pred_taken,
+                        pred_btb_hit, effective_pred_taken, pred_next_pc, actual_next_pc);
             end
         end
     endtask
@@ -283,6 +295,10 @@ module tb_cpu;
                 if (cycles > max_cycles)
                     $fatal(1, "Timeout: %0d/%0d retirements; fetch PC=%08h",
                         retired, expected_count, imem_addr);
+                if (trace_predictions)
+                    $display("FETCH %0d %0d %0d %0d %0d %0d %0d %0d",
+                        cycles, imem_addr, fetch_raw, fetch_hit, fetch_taken,
+                        fetch_next, flush, load_stall);
 
                 if (dmem_we) begin
                     if (!store_pending || dmem_addr !== expected_store_addr ||
