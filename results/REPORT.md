@@ -33,7 +33,11 @@ Vòng tính tổng có 99 lần rẽ liên tiếp và một lần thoát. BP 2 b
 
 Khi dữ liệu đổi theo từng khối, bộ 1 bit đổi hướng ngay sau lần sai đầu tiên. Trong bài đếm theo điều kiện, 1 bit có 18 lần flush, còn 2 bit có 33. Tổng trên bảy chương trình, 1 bit đúng 1.021/1.327 nhánh (76,94%) và dùng ít hơn 2 bit 10 chu kỳ.
 
-CPI tổng giảm từ 1,9895 xuống 1,3623 giữa chế độ chờ và bộ 2 bit. Hai cấu hình cùng mất 524 chu kỳ do load-use. Chế độ chờ mất 2.654 chu kỳ ở nhánh. Bộ 2 bit dùng 311 lần flush, tương ứng 622 chu kỳ. Hiệu số là 2.032 chu kỳ, đúng với chênh lệch đo được.
+![So sánh CPI của bốn chế độ trên từng benchmark](cpi_comparison.png)
+
+CPI gộp trên 3.240 lệnh giảm từ **1,99** ở chế độ chờ nhánh xuống **1,36** với bộ 2 bit. Hai giá trị được tính bằng tổng chu kỳ chia cho tổng số lệnh hoàn tất của từng chế độ. Trong bài tính tổng, CPI giảm từ 1,67 xuống 1,03. Bài không có nhánh giữ nguyên ở 1,33 vì cả bốn chế độ đều mất 16 chu kỳ cho 12 lệnh.
+
+Hai cấu hình cùng mất 524 chu kỳ do load-use. Chế độ chờ mất 2.654 chu kỳ ở nhánh. Bộ 2 bit dùng 311 lần flush, tương ứng 622 chu kỳ. Hiệu số là 2.032 chu kỳ, đúng với chênh lệch đo được.
 
 ## Phân tích theo từng địa chỉ nhánh
 

@@ -38,6 +38,7 @@ python run.py --case sum_loop --no-sweep --output build/demo
 | [results/metrics.csv](results/metrics.csv) | Số liệu từng lần chạy, gồm quét kích thước bảng |
 | [results/branch_stats.csv](results/branch_stats.csv) | Số lần dự đoán và nguyên nhân sai PC theo từng địa chỉ nhánh |
 | [results/performance.png](results/performance.png) | Độ chính xác hướng và tỷ lệ tăng tốc |
+| [results/cpi_comparison.png](results/cpi_comparison.png) | So sánh số chu kỳ mỗi lệnh theo benchmark và chế độ xử lý nhánh |
 
 ```powershell
 python programs/generate.py --list
